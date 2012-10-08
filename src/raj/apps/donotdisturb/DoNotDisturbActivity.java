@@ -63,7 +63,7 @@ public class DoNotDisturbActivity extends Activity {
 		endTimeFragment.show(getFragmentManager(), "EndTimePicker");
 	}
 
-	public void onSaveClick(View view) {
+	public void onApplyClick(View view) {
 		createAlarm(this, mStartTime.getText().toString(), Action.START);
 		createAlarm(this, mEndTime.getText().toString(), Action.END);
 	}
