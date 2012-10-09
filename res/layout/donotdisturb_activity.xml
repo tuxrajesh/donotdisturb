@@ -1,73 +1,35 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
-    <Button
-        android:id="@+id/btn_end_time_pick"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_marginRight="24dp"
-        android:layout_marginTop="58dp"
-        android:onClick="onEndTimePickClick"
-        android:text="@string/_8230_" />
+        android:orientation="horizontal" >
 
-    <EditText
-        android:id="@+id/edit_end_time"
-        android:layout_width="100dip"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/btn_end_time_pick"
-        android:layout_alignBottom="@+id/btn_end_time_pick"
-        android:layout_centerHorizontal="true"
-        android:ems="10"
-        android:inputType="none" />
+        <Button
+            android:id="@+id/btn_start_time"
+            android:layout_width="100dip"
+            android:layout_height="wrap_content"
+            android:layout_margin="28dip"
+            android:onClick="onStartTimePickClick" />
 
-    <EditText
-        android:id="@+id/edit_start_time"
-        android:layout_width="100dip"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/edit_end_time"
-        android:ems="10"
-        android:inputType="none" />
-
-    <Button
-        android:id="@+id/btn_start_time_pick"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/edit_start_time"
-        android:layout_alignLeft="@+id/btn_end_time_pick"
-        android:onClick="onStartTimePickClick"
-        android:text="@string/_8230_" />
-
-    <TextView
-        android:id="@+id/txt_end_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/edit_end_time"
-        android:layout_alignBottom="@+id/edit_end_time"
-        android:layout_marginRight="22dp"
-        android:layout_toLeftOf="@+id/edit_end_time"
-        android:text="@string/end_time" />
-
-    <TextView
-        android:id="@+id/txt_start_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/btn_start_time_pick"
-        android:layout_alignBottom="@+id/btn_start_time_pick"
-        android:layout_alignLeft="@+id/txt_end_time"
-        android:text="@string/start_time" />
+        <Button
+            android:id="@+id/btn_end_time"
+            android:layout_width="100dip"
+            android:layout_height="wrap_content"
+            android:layout_margin="28dip"
+            android:onClick="onEndTimePickClick" />
+    </LinearLayout>
 
     <Button
         android:id="@+id/btn_apply"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/txt_end_time"
-        android:layout_below="@+id/btn_end_time_pick"
-        android:layout_marginTop="32dp"
+        android:layout_gravity="center"
         android:onClick="onApplyClick"
         android:text="@string/apply" />
 
-</RelativeLayout>
+</LinearLayout>

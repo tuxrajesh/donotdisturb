@@ -12,23 +12,26 @@ import android.content.Intent;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
-import android.widget.EditText;
+import android.widget.Button;
 
 public class DoNotDisturbActivity extends Activity {
 
 	static final long RECURRING_INTERVAL = AlarmManager.INTERVAL_DAY;
 	static final String TAG = "DoNotDisturbActivity";
 
-	private EditText mStartTime;
-	private EditText mEndTime;
+	private Button mStartTime;
+	private Button mEndTime;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.donotdisturb_activity);
 
-		mStartTime = (EditText) findViewById(R.id.edit_start_time);
-		mEndTime = (EditText) findViewById(R.id.edit_end_time);
+		mStartTime = (Button) findViewById(R.id.btn_start_time);
+		mEndTime = (Button) findViewById(R.id.btn_end_time);
+
+		mStartTime.setText("11:00 PM");
+		mEndTime.setText("06:00 AM");
 	}
 
 	@Override
