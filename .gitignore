@@ -1,0 +1,16 @@
+# Compiled files
+*.class
+
+# Generated Files
+bin\
+gen\
+
+# Temp Files
+.DS_Store
+.DS_Store?
+
+# Miscellaneous
+*.apk
+*.ap_
+*.dex
+local.properties
