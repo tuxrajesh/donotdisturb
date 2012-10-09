@@ -2,8 +2,8 @@
 *.class
 
 # Generated Files
-bin\
-gen\
+bin/
+gen/
 
 # Temp Files
 .DS_Store
