@@ -5,9 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-public class DoNotDisturbReceiver extends BroadcastReceiver {
+public class DoNotDisturbAlarmReceiver extends BroadcastReceiver {
 
-	final static String TAG = "DoNotDisturbReceiver";
+	final static String TAG = "DoNotDisturbAlarmReceiver";
 
 	@Override
 	public void onReceive(Context context, Intent intent) {

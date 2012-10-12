@@ -22,7 +22,7 @@ public class DoNotDisturbService extends IntentService {
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.v(TAG, "onStartCommand");
 		Action action = (Action) intent
-				.getSerializableExtra("DoNotDisturbReceiver");
+				.getSerializableExtra("DoNotDisturbAlarmReceiver");
 
 		NotificationManager notifyMgr = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 

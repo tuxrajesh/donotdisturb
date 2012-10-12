@@ -81,7 +81,7 @@ public class DoNotDisturbActivity extends Activity {
 
 		AlarmManager manager = (AlarmManager) context
 				.getSystemService(ALARM_SERVICE);
-		Intent receiverIntent = new Intent(context, DoNotDisturbReceiver.class);
+		Intent receiverIntent = new Intent(context, DoNotDisturbAlarmReceiver.class);
 		receiverIntent.putExtra(TAG, action);
 
 		PendingIntent actionIntent = PendingIntent.getBroadcast(context,
