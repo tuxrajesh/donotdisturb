@@ -3,12 +3,13 @@ package raj.apps.donotdisturb;
 import java.util.Calendar;
 
 import raj.apps.donotdisturb.TimePickerFragment.OnTimePickedListener;
-import android.os.Bundle;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -16,8 +17,12 @@ import android.widget.Button;
 
 public class DoNotDisturbActivity extends Activity {
 
-	static final long RECURRING_INTERVAL = AlarmManager.INTERVAL_DAY;
-	static final String TAG = "DoNotDisturbActivity";
+	private static final long RECURRING_INTERVAL = AlarmManager.INTERVAL_DAY;
+	private static final String TAG = "DoNotDisturbActivity";
+
+	public static final String PREFERENCE_NAME = "DoNotDisturbSchedule";
+	public static final String START_TIME = "StartTime";
+	public static final String END_TIME = "EndTime";
 
 	private Button mStartTime;
 	private Button mEndTime;
@@ -30,8 +35,11 @@ public class DoNotDisturbActivity extends Activity {
 		mStartTime = (Button) findViewById(R.id.btn_start_time);
 		mEndTime = (Button) findViewById(R.id.btn_end_time);
 
-		mStartTime.setText("11:00 PM");
-		mEndTime.setText("06:00 AM");
+		// Restore preferences
+		SharedPreferences sharedPref = getSharedPreferences(PREFERENCE_NAME,
+				MODE_PRIVATE);
+		mStartTime.setText(sharedPref.getString(START_TIME, "23:00"));
+		mEndTime.setText(sharedPref.getString(END_TIME, "06:00"));
 	}
 
 	@Override
@@ -72,6 +80,19 @@ public class DoNotDisturbActivity extends Activity {
 	}
 
 	private void createAlarm(Context context, String time, Action action) {
+
+		SharedPreferences sharedPref = getSharedPreferences(PREFERENCE_NAME,
+				MODE_PRIVATE);
+		SharedPreferences.Editor editor = sharedPref.edit();
+
+		if (action == Action.START) {
+			editor.putString(START_TIME, time);
+		} else {
+			editor.putString(END_TIME, time);
+		}
+
+		editor.commit();
+
 		int hourOfDay = Integer.parseInt(time.split(":")[0]);
 		int startMinute = Integer.parseInt(time.split(":")[1]);
 
@@ -81,7 +102,8 @@ public class DoNotDisturbActivity extends Activity {
 
 		AlarmManager manager = (AlarmManager) context
 				.getSystemService(ALARM_SERVICE);
-		Intent receiverIntent = new Intent(context, DoNotDisturbAlarmReceiver.class);
+		Intent receiverIntent = new Intent(context,
+				DoNotDisturbAlarmReceiver.class);
 		receiverIntent.putExtra(TAG, action);
 
 		PendingIntent actionIntent = PendingIntent.getBroadcast(context,

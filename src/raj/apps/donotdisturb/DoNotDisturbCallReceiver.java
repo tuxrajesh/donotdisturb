@@ -1,8 +1,11 @@
 package raj.apps.donotdisturb;
 
+import java.util.Calendar;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
@@ -19,31 +22,58 @@ public class DoNotDisturbCallReceiver extends BroadcastReceiver {
 		Bundle bundle = intent.getExtras();
 		String state = bundle.getString(TelephonyManager.EXTRA_STATE);
 
-		Log.v(TAG, state);
+		SharedPreferences pref = context.getSharedPreferences(
+				DoNotDisturbActivity.PREFERENCE_NAME, Context.MODE_PRIVATE);
 
-		if (state.equalsIgnoreCase(TelephonyManager.EXTRA_STATE_RINGING)) {
+		String startTime = pref.getString(DoNotDisturbActivity.START_TIME,
+				"23:00");
+		String endTime = pref.getString(DoNotDisturbActivity.END_TIME, "06:00");
 
-			String phoneNumber = bundle
-					.getString(TelephonyManager.EXTRA_INCOMING_NUMBER);
-			Log.v(TAG, phoneNumber);
+		Calendar currentCalendar = Calendar.getInstance();
+		int currentHour = currentCalendar.get(Calendar.HOUR_OF_DAY);
+		int currentMinute = currentCalendar.get(Calendar.MINUTE);
+		currentCalendar.set(Calendar.HOUR_OF_DAY, currentHour);
+		currentCalendar.set(Calendar.MINUTE, currentMinute);
 
-			if (phoneNumber.equalsIgnoreCase("8043800383")
-					|| phoneNumber.equalsIgnoreCase("7326685854")) {
+		Calendar startCalendar = Calendar.getInstance();
+		startCalendar.set(Calendar.HOUR_OF_DAY,
+				Integer.parseInt(startTime.split(":")[0]));
+		startCalendar.set(Calendar.MINUTE,
+				Integer.parseInt(startTime.split(":")[1]));
+
+		Calendar endCalendar = Calendar.getInstance();
+		endCalendar.set(Calendar.HOUR_OF_DAY,
+				Integer.parseInt(endTime.split(":")[0]));
+		endCalendar.set(Calendar.MINUTE,
+				Integer.parseInt(endTime.split(":")[1]));
+
+		if (currentCalendar.after(startCalendar)
+				&& endCalendar.after(currentCalendar)) {
+
+			if (state.equalsIgnoreCase(TelephonyManager.EXTRA_STATE_RINGING)) {
+
+				String phoneNumber = bundle
+						.getString(TelephonyManager.EXTRA_INCOMING_NUMBER);
+				Log.v(TAG, phoneNumber);
+
+				if (phoneNumber.equalsIgnoreCase("8043800383")
+						|| phoneNumber.equalsIgnoreCase("7326685854")) {
+
+					Intent serviceIntent = new Intent(context,
+							DoNotDisturbCallService.class);
+					serviceIntent.putExtra("DoNotDisturbCallReceiver",
+							AudioManager.RINGER_MODE_NORMAL);
+					context.startService(serviceIntent);
+				}
+
+			} else {
 
 				Intent serviceIntent = new Intent(context,
 						DoNotDisturbCallService.class);
 				serviceIntent.putExtra("DoNotDisturbCallReceiver",
-						AudioManager.RINGER_MODE_NORMAL);
+						AudioManager.RINGER_MODE_SILENT);
 				context.startService(serviceIntent);
 			}
-			
-		} else if (state.equalsIgnoreCase(TelephonyManager.EXTRA_STATE_OFFHOOK)) {
-
-			Intent serviceIntent = new Intent(context,
-					DoNotDisturbCallService.class);
-			serviceIntent.putExtra("DoNotDisturbCallReceiver",
-					AudioManager.RINGER_MODE_SILENT);
-			context.startService(serviceIntent);
 		}
 	}
 
