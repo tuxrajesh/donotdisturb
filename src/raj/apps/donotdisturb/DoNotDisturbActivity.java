@@ -1,6 +1,9 @@
 package raj.apps.donotdisturb;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 
 import raj.apps.donotdisturb.TimePickerFragment.OnTimePickedListener;
 import android.app.Activity;
@@ -14,6 +17,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.Toast;
 
 public class DoNotDisturbActivity extends Activity {
 
@@ -23,29 +28,48 @@ public class DoNotDisturbActivity extends Activity {
 	public static final String PREFERENCE_NAME = "DoNotDisturbSchedule";
 	public static final String START_TIME = "StartTime";
 	public static final String END_TIME = "EndTime";
+	
+	private String mStartTime;
+	private String mEndTime;
 
-	private Button mStartTime;
-	private Button mEndTime;
+	private Button mStart;
+	private Button mEnd;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.donotdisturb_activity);
 
-		mStartTime = (Button) findViewById(R.id.btn_start_time);
-		mEndTime = (Button) findViewById(R.id.btn_end_time);
+		mStart = (Button) findViewById(R.id.btn_start_time);
+		mEnd = (Button) findViewById(R.id.btn_end_time);
 
 		// Restore preferences
 		SharedPreferences sharedPref = getSharedPreferences(PREFERENCE_NAME,
 				MODE_PRIVATE);
-		mStartTime.setText(sharedPref.getString(START_TIME, "23:00"));
-		mEndTime.setText(sharedPref.getString(END_TIME, "06:00"));
+		
+		mStartTime = sharedPref.getString(START_TIME, "23:00");
+		mEndTime = sharedPref.getString(END_TIME, "06:00");
+		
+		formatAndDisplayTime(mStart, mStartTime);
+		formatAndDisplayTime(mEnd, mEndTime);
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.donotdisturb_activity, menu);
 		return true;
+	}
+	
+	public void onSwitchClick(View view) {
+	    boolean on = ((CompoundButton) view).isChecked();
+	    
+	    if (on) {
+	        // Enable Alarm
+	    	Toast.makeText(getApplicationContext(), "ON", Toast.LENGTH_SHORT).show();
+	    } else {
+	        // Disable Alarm
+	    	Toast.makeText(getApplicationContext(), "OFF", Toast.LENGTH_SHORT).show();
+	    }
 	}
 
 	public void onStartTimePickClick(View view) {
@@ -54,8 +78,8 @@ public class DoNotDisturbActivity extends Activity {
 
 			@Override
 			public void onTimePicked(int hourOfDay, int minute) {
-				String timeOfDay = String.format("%d:%d", hourOfDay, minute);
-				mStartTime.setText(timeOfDay);
+				mStartTime = String.format("%d:%d", hourOfDay, minute);
+				formatAndDisplayTime(mStart, mStartTime);
 			}
 		});
 		startTimeFragment.show(getFragmentManager(), "StartTimePicker");
@@ -67,16 +91,16 @@ public class DoNotDisturbActivity extends Activity {
 
 			@Override
 			public void onTimePicked(int hourOfDay, int minute) {
-				String timeOfDay = String.format("%d:%d", hourOfDay, minute);
-				mEndTime.setText(timeOfDay);
+				mEndTime = String.format("%d:%d", hourOfDay, minute);
+				formatAndDisplayTime(mEnd, mEndTime);
 			}
 		});
 		endTimeFragment.show(getFragmentManager(), "EndTimePicker");
 	}
 
 	public void onApplyClick(View view) {
-		createAlarm(this, mStartTime.getText().toString(), Action.START);
-		createAlarm(this, mEndTime.getText().toString(), Action.END);
+		createAlarm(this, mStartTime, Action.START);
+		createAlarm(this, mEndTime, Action.END);
 	}
 
 	private void createAlarm(Context context, String time, Action action) {
@@ -111,7 +135,23 @@ public class DoNotDisturbActivity extends Activity {
 				PendingIntent.FLAG_UPDATE_CURRENT);
 		manager.setRepeating(AlarmManager.RTC_WAKEUP,
 				calendar.getTimeInMillis(), RECURRING_INTERVAL, actionIntent);
+		
+		String displayInfo = String.format("Silence Schedule : %s to %s", mStartTime, mEndTime);
+		Toast.makeText(getApplicationContext(), displayInfo, Toast.LENGTH_SHORT).show();
 
 		Log.v(TAG, "Alarm Set " + action.toString());
+	}
+	
+	private void formatAndDisplayTime(Button button, String time) {
+		
+		try {
+			SimpleDateFormat inputFormat = new SimpleDateFormat("hh:mm");
+			Date date = inputFormat.parse(time);
+			
+			SimpleDateFormat outputFormat = new SimpleDateFormat("hh:mm a");
+			button.setText(outputFormat.format(date));
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
 	}
 }

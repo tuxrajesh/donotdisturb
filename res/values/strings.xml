@@ -5,6 +5,8 @@
     <string name="start_time">Start Time</string>
     <string name="end_time">End Time</string>
     <string name="_8230_">&#8230;</string>
-    <string name="apply">Apply Changes</string>
+    <string name="on">On</string>
+    <string name="off">Off</string>
+    <string name="apply">Apply Schedule</string>
     
 </resources>
