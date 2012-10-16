@@ -75,19 +75,33 @@ public class DoNotDisturbActivity extends Activity {
 
 		mStartTime = sharedPref.getString(START_TIME, "23:00");
 		mEndTime = sharedPref.getString(END_TIME, "06:00");
+		
+		String toastMessage = null;
 
 		if (on) {
 			handleAlarm(this, mStartTime, Action.START, true);
 			handleAlarm(this, mEndTime, Action.END, true);
+			
+			toastMessage = String.format("Schedule set between %s and %s",
+					formatTime(mStartTime, "hh:mm", "hh:mm a"),
+					formatTime(mEndTime, "hh:mm", "hh:mm a"));
 		} else {
 			handleAlarm(this, mStartTime, Action.START, false);
 			handleAlarm(this, mEndTime, Action.END, false);
+			
+			toastMessage = String.format(
+					"Schedule cancelled between %s and %s",
+					formatTime(mStartTime, "hh:mm", "hh:mm a"),
+					formatTime(mEndTime, "hh:mm", "hh:mm a"));
 		}
 		
 		SharedPreferences.Editor editor = sharedPref.edit();
 
 		editor.putBoolean(ENABLED_FLAG, on);
 		editor.commit();
+		
+		Toast.makeText(getApplicationContext(), toastMessage,
+				Toast.LENGTH_LONG).show();
 	}
 
 	public void onStartTimePickClick(View view) {
@@ -124,6 +138,8 @@ public class DoNotDisturbActivity extends Activity {
 		editor.putString(START_TIME, mStartTime);
 		editor.putString(END_TIME, mEndTime);
 		editor.commit();
+		
+		Toast.makeText(getApplicationContext(), "Schedule Saved", Toast.LENGTH_LONG).show();
 	}
 
 	private void handleAlarm(Context context, String time, Action action,
@@ -147,26 +163,14 @@ public class DoNotDisturbActivity extends Activity {
 				action.ordinal(), receiverIntent,
 				PendingIntent.FLAG_UPDATE_CURRENT);
 
-		String toastMessage = null;
-
 		if (enable) {
 			manager.setRepeating(AlarmManager.RTC_WAKEUP,
 					calendar.getTimeInMillis(), RECURRING_INTERVAL,
 					actionIntent);
-			toastMessage = String.format("Schedule set between %s and %s",
-					formatTime(mStartTime, "hh:mm", "hh:mm a"),
-					formatTime(mEndTime, "hh:mm", "hh:mm a"));
 		} else {
 
 			manager.cancel(actionIntent);
-			toastMessage = String.format(
-					"Schedule cancelled between %s and %s",
-					formatTime(mStartTime, "hh:mm", "hh:mm a"),
-					formatTime(mEndTime, "hh:mm", "hh:mm a"));
 		}
-
-		Toast.makeText(getApplicationContext(), toastMessage,
-				Toast.LENGTH_SHORT).show();
 	}
 
 	private String formatTime(String inputTime, String inputFormat,

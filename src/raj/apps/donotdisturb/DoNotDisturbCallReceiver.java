@@ -28,6 +28,11 @@ public class DoNotDisturbCallReceiver extends BroadcastReceiver {
 		String startTime = pref.getString(DoNotDisturbActivity.START_TIME,
 				"23:00");
 		String endTime = pref.getString(DoNotDisturbActivity.END_TIME, "06:00");
+		Boolean enabled = pref.getBoolean(DoNotDisturbActivity.ENABLED_FLAG, false);
+		
+		if(!enabled) {
+			return;
+		}
 
 		Calendar currentCalendar = Calendar.getInstance();
 		int currentHour = currentCalendar.get(Calendar.HOUR_OF_DAY);
