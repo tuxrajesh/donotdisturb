@@ -9,12 +9,12 @@ import android.content.Intent;
 import android.media.AudioManager;
 import android.util.Log;
 
-public class DoNotDisturbService extends IntentService {
+public class DoNotDisturbAlarmService extends IntentService {
 
-	final static String TAG = "DoNotDisturbService";
+	final static String TAG = "DoNotDisturbAlarmService";
 	final static int NOTIFY_ID = 1;
 
-	public DoNotDisturbService() {
+	public DoNotDisturbAlarmService() {
 		super(TAG);
 	}
 
@@ -30,7 +30,7 @@ public class DoNotDisturbService extends IntentService {
 			Log.v(TAG, "Received : " + action.toString());
 
 			Intent notificationIntent = new Intent(this,
-					DoNotDisturbService.class);
+					DoNotDisturbAlarmService.class);
 			PendingIntent contentIntent = PendingIntent.getService(this, 0,
 					notificationIntent, 0);
 

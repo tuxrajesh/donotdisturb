@@ -35,7 +35,7 @@
             </intent-filter>
         </receiver>
 
-        <service android:name=".DoNotDisturbService" >
+        <service android:name=".DoNotDisturbAlarmService" >
         </service>
         
         <service android:name=".DoNotDisturbCallService" >

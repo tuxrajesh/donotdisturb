@@ -18,6 +18,7 @@ import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.Toast;
 
 public class DoNotDisturbActivity extends Activity {
@@ -28,12 +29,14 @@ public class DoNotDisturbActivity extends Activity {
 	public static final String PREFERENCE_NAME = "DoNotDisturbSchedule";
 	public static final String START_TIME = "StartTime";
 	public static final String END_TIME = "EndTime";
-	
+	public static final String ENABLED_FLAG = "EnabledFlag";
+
 	private String mStartTime;
 	private String mEndTime;
 
 	private Button mStart;
 	private Button mEnd;
+	private Switch mEnable;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -42,16 +45,19 @@ public class DoNotDisturbActivity extends Activity {
 
 		mStart = (Button) findViewById(R.id.btn_start_time);
 		mEnd = (Button) findViewById(R.id.btn_end_time);
+		mEnable = (Switch) findViewById(R.id.swt_enable);
+		
 
 		// Restore preferences
 		SharedPreferences sharedPref = getSharedPreferences(PREFERENCE_NAME,
 				MODE_PRIVATE);
-		
+
 		mStartTime = sharedPref.getString(START_TIME, "23:00");
 		mEndTime = sharedPref.getString(END_TIME, "06:00");
-		
-		formatAndDisplayTime(mStart, mStartTime);
-		formatAndDisplayTime(mEnd, mEndTime);
+
+		mEnable.setChecked(sharedPref.getBoolean(ENABLED_FLAG, false));
+		mStart.setText(formatTime(mStartTime, "hh:mm", "hh:mm a"));
+		mEnd.setText(formatTime(mEndTime, "hh:mm", "hh:mm a"));
 	}
 
 	@Override
@@ -59,17 +65,29 @@ public class DoNotDisturbActivity extends Activity {
 		getMenuInflater().inflate(R.menu.donotdisturb_activity, menu);
 		return true;
 	}
-	
+
 	public void onSwitchClick(View view) {
-	    boolean on = ((CompoundButton) view).isChecked();
-	    
-	    if (on) {
-	        // Enable Alarm
-	    	Toast.makeText(getApplicationContext(), "ON", Toast.LENGTH_SHORT).show();
-	    } else {
-	        // Disable Alarm
-	    	Toast.makeText(getApplicationContext(), "OFF", Toast.LENGTH_SHORT).show();
-	    }
+		boolean on = ((CompoundButton) view).isChecked();
+
+		// Get Preferences
+		SharedPreferences sharedPref = getSharedPreferences(PREFERENCE_NAME,
+				MODE_PRIVATE);
+
+		mStartTime = sharedPref.getString(START_TIME, "23:00");
+		mEndTime = sharedPref.getString(END_TIME, "06:00");
+
+		if (on) {
+			handleAlarm(this, mStartTime, Action.START, true);
+			handleAlarm(this, mEndTime, Action.END, true);
+		} else {
+			handleAlarm(this, mStartTime, Action.START, false);
+			handleAlarm(this, mEndTime, Action.END, false);
+		}
+		
+		SharedPreferences.Editor editor = sharedPref.edit();
+
+		editor.putBoolean(ENABLED_FLAG, on);
+		editor.commit();
 	}
 
 	public void onStartTimePickClick(View view) {
@@ -79,7 +97,7 @@ public class DoNotDisturbActivity extends Activity {
 			@Override
 			public void onTimePicked(int hourOfDay, int minute) {
 				mStartTime = String.format("%d:%d", hourOfDay, minute);
-				formatAndDisplayTime(mStart, mStartTime);
+				mStart.setText(formatTime(mStartTime, "hh:mm", "hh:mm a"));
 			}
 		});
 		startTimeFragment.show(getFragmentManager(), "StartTimePicker");
@@ -92,30 +110,25 @@ public class DoNotDisturbActivity extends Activity {
 			@Override
 			public void onTimePicked(int hourOfDay, int minute) {
 				mEndTime = String.format("%d:%d", hourOfDay, minute);
-				formatAndDisplayTime(mEnd, mEndTime);
+				mEnd.setText(formatTime(mEndTime, "hh:mm", "hh:mm a"));
 			}
 		});
 		endTimeFragment.show(getFragmentManager(), "EndTimePicker");
 	}
 
 	public void onApplyClick(View view) {
-		createAlarm(this, mStartTime, Action.START);
-		createAlarm(this, mEndTime, Action.END);
-	}
-
-	private void createAlarm(Context context, String time, Action action) {
-
 		SharedPreferences sharedPref = getSharedPreferences(PREFERENCE_NAME,
 				MODE_PRIVATE);
 		SharedPreferences.Editor editor = sharedPref.edit();
 
-		if (action == Action.START) {
-			editor.putString(START_TIME, time);
-		} else {
-			editor.putString(END_TIME, time);
-		}
-
+		editor.putString(START_TIME, mStartTime);
+		editor.putString(END_TIME, mEndTime);
 		editor.commit();
+	}
+
+	private void handleAlarm(Context context, String time, Action action,
+			Boolean enable) {
+		Log.v(TAG, "handleAlarm");
 
 		int hourOfDay = Integer.parseInt(time.split(":")[0]);
 		int startMinute = Integer.parseInt(time.split(":")[1]);
@@ -133,25 +146,43 @@ public class DoNotDisturbActivity extends Activity {
 		PendingIntent actionIntent = PendingIntent.getBroadcast(context,
 				action.ordinal(), receiverIntent,
 				PendingIntent.FLAG_UPDATE_CURRENT);
-		manager.setRepeating(AlarmManager.RTC_WAKEUP,
-				calendar.getTimeInMillis(), RECURRING_INTERVAL, actionIntent);
-		
-		String displayInfo = String.format("Silence Schedule : %s to %s", mStartTime, mEndTime);
-		Toast.makeText(getApplicationContext(), displayInfo, Toast.LENGTH_SHORT).show();
 
-		Log.v(TAG, "Alarm Set " + action.toString());
+		String toastMessage = null;
+
+		if (enable) {
+			manager.setRepeating(AlarmManager.RTC_WAKEUP,
+					calendar.getTimeInMillis(), RECURRING_INTERVAL,
+					actionIntent);
+			toastMessage = String.format("Schedule set between %s and %s",
+					formatTime(mStartTime, "hh:mm", "hh:mm a"),
+					formatTime(mEndTime, "hh:mm", "hh:mm a"));
+		} else {
+
+			manager.cancel(actionIntent);
+			toastMessage = String.format(
+					"Schedule cancelled between %s and %s",
+					formatTime(mStartTime, "hh:mm", "hh:mm a"),
+					formatTime(mEndTime, "hh:mm", "hh:mm a"));
+		}
+
+		Toast.makeText(getApplicationContext(), toastMessage,
+				Toast.LENGTH_SHORT).show();
 	}
-	
-	private void formatAndDisplayTime(Button button, String time) {
-		
+
+	private String formatTime(String inputTime, String inputFormat,
+			String outputFormat) {
+		String outputTime = null;
+
 		try {
-			SimpleDateFormat inputFormat = new SimpleDateFormat("hh:mm");
-			Date date = inputFormat.parse(time);
-			
-			SimpleDateFormat outputFormat = new SimpleDateFormat("hh:mm a");
-			button.setText(outputFormat.format(date));
+			SimpleDateFormat inputDateFormat = new SimpleDateFormat(inputFormat);
+			Date date = inputDateFormat.parse(inputTime);
+			SimpleDateFormat outputDateFormat = new SimpleDateFormat(
+					outputFormat);
+			outputTime = outputDateFormat.format(date);
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
+
+		return outputTime;
 	}
 }
