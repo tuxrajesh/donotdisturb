@@ -1,45 +1,65 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical" >
-    
-    <Switch
-        android:id="@+id/swt_enable"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="28dip"
-        android:textOn="@string/on"
-        android:textOff="@string/off"
-        android:onClick="onSwitchClick" />
+    android:layout_height="match_parent" >
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <TableRow
+        android:id="@+id/switchRow"
         android:layout_height="wrap_content"
-        android:orientation="horizontal" >
+        android:paddingBottom="10dip"
+        android:paddingTop="28dip" >
+
+        <TextView
+            android:id="@+id/txt_schedule"
+            android:layout_weight="1"
+            android:gravity="right"
+            android:paddingRight="5dip"
+            android:text="@string/scheduled" />
+
+        <Switch
+            android:id="@+id/swt_enable"
+            android:layout_width="150dip"
+            android:onClick="onSwitchClick"
+            android:textOff="@string/off"
+            android:textOn="@string/on" />
+    </TableRow>
+
+    <TableRow
+        android:id="@+id/startTimeRow"
+        android:layout_height="wrap_content" >
+
+        <TextView
+            android:id="@+id/txt_start_time"
+            android:layout_weight="1"
+            android:gravity="right"
+            android:paddingRight="5dip"
+            android:text="@string/start_time" />
 
         <Button
             android:id="@+id/btn_start_time"
-            android:layout_width="100dip"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="28dip"
+            android:layout_marginRight="28dip"
             android:onClick="onStartTimePickClick" />
+    </TableRow>
+
+    <TableRow
+        android:id="@+id/endTimeRow"
+        android:layout_height="wrap_content" >
+
+        <TextView
+            android:id="@+id/txt_end_time"
+            android:layout_weight="1"
+            android:gravity="right"
+            android:paddingRight="5dip"
+            android:text="@string/end_time" />
 
         <Button
             android:id="@+id/btn_end_time"
-            android:layout_width="100dip"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="28dip"
+            android:layout_marginRight="28dip"
             android:onClick="onEndTimePickClick" />
-    </LinearLayout>
+    </TableRow>
 
-    <Button
-        android:id="@+id/btn_apply"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:onClick="onApplyClick"
-        android:text="@string/apply" />
-
-</LinearLayout>
+</TableLayout>

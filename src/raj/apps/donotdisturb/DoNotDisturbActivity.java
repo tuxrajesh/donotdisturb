@@ -19,6 +19,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.Switch;
+import android.widget.TableRow;
 import android.widget.Toast;
 
 public class DoNotDisturbActivity extends Activity {
@@ -31,12 +32,15 @@ public class DoNotDisturbActivity extends Activity {
 	public static final String END_TIME = "EndTime";
 	public static final String ENABLED_FLAG = "EnabledFlag";
 
+	private Boolean mEnabled;
 	private String mStartTime;
 	private String mEndTime;
 
 	private Button mStart;
 	private Button mEnd;
 	private Switch mEnable;
+	private TableRow mStartTimeRow;
+	private TableRow mEndTimeRow;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -46,7 +50,8 @@ public class DoNotDisturbActivity extends Activity {
 		mStart = (Button) findViewById(R.id.btn_start_time);
 		mEnd = (Button) findViewById(R.id.btn_end_time);
 		mEnable = (Switch) findViewById(R.id.swt_enable);
-		
+		mStartTimeRow = (TableRow) findViewById(R.id.startTimeRow);
+		mEndTimeRow = (TableRow) findViewById(R.id.endTimeRow);
 
 		// Restore preferences
 		SharedPreferences sharedPref = getSharedPreferences(PREFERENCE_NAME,
@@ -54,10 +59,17 @@ public class DoNotDisturbActivity extends Activity {
 
 		mStartTime = sharedPref.getString(START_TIME, "23:00");
 		mEndTime = sharedPref.getString(END_TIME, "06:00");
+		mEnabled = sharedPref.getBoolean(ENABLED_FLAG, false);
 
-		mEnable.setChecked(sharedPref.getBoolean(ENABLED_FLAG, false));
+		mEnable.setChecked(mEnabled);
 		mStart.setText(formatTime(mStartTime, "hh:mm", "hh:mm a"));
 		mEnd.setText(formatTime(mEndTime, "hh:mm", "hh:mm a"));
+
+		if (mEnabled) {
+			setScheduleVisibility(View.VISIBLE);
+		} else {
+			setScheduleVisibility(View.INVISIBLE);
+		}
 	}
 
 	@Override
@@ -75,33 +87,38 @@ public class DoNotDisturbActivity extends Activity {
 
 		mStartTime = sharedPref.getString(START_TIME, "23:00");
 		mEndTime = sharedPref.getString(END_TIME, "06:00");
-		
+
 		String toastMessage = null;
 
 		if (on) {
+
 			handleAlarm(this, mStartTime, Action.START, true);
 			handleAlarm(this, mEndTime, Action.END, true);
-			
+
 			toastMessage = String.format("Schedule set between %s and %s",
 					formatTime(mStartTime, "hh:mm", "hh:mm a"),
 					formatTime(mEndTime, "hh:mm", "hh:mm a"));
+
+			setScheduleVisibility(View.VISIBLE);
+
 		} else {
+
 			handleAlarm(this, mStartTime, Action.START, false);
 			handleAlarm(this, mEndTime, Action.END, false);
-			
-			toastMessage = String.format(
-					"Schedule cancelled between %s and %s",
-					formatTime(mStartTime, "hh:mm", "hh:mm a"),
-					formatTime(mEndTime, "hh:mm", "hh:mm a"));
+
+			toastMessage = "Schedule Cancelled";
+
+			setScheduleVisibility(View.INVISIBLE);
+
 		}
-		
+
 		SharedPreferences.Editor editor = sharedPref.edit();
 
 		editor.putBoolean(ENABLED_FLAG, on);
 		editor.commit();
-		
-		Toast.makeText(getApplicationContext(), toastMessage,
-				Toast.LENGTH_LONG).show();
+
+		Toast.makeText(getApplicationContext(), toastMessage, Toast.LENGTH_LONG)
+				.show();
 	}
 
 	public void onStartTimePickClick(View view) {
@@ -112,6 +129,16 @@ public class DoNotDisturbActivity extends Activity {
 			public void onTimePicked(int hourOfDay, int minute) {
 				mStartTime = String.format("%d:%d", hourOfDay, minute);
 				mStart.setText(formatTime(mStartTime, "hh:mm", "hh:mm a"));
+
+				SharedPreferences sharedPref = getSharedPreferences(
+						PREFERENCE_NAME, MODE_PRIVATE);
+				SharedPreferences.Editor editor = sharedPref.edit();
+
+				editor.putString(START_TIME, mStartTime);
+				editor.commit();
+
+				handleAlarm(getApplicationContext(), mStartTime, Action.START,
+						false);
 			}
 		});
 		startTimeFragment.show(getFragmentManager(), "StartTimePicker");
@@ -125,21 +152,19 @@ public class DoNotDisturbActivity extends Activity {
 			public void onTimePicked(int hourOfDay, int minute) {
 				mEndTime = String.format("%d:%d", hourOfDay, minute);
 				mEnd.setText(formatTime(mEndTime, "hh:mm", "hh:mm a"));
+
+				SharedPreferences sharedPref = getSharedPreferences(
+						PREFERENCE_NAME, MODE_PRIVATE);
+				SharedPreferences.Editor editor = sharedPref.edit();
+
+				editor.putString(END_TIME, mEndTime);
+				editor.commit();
+
+				handleAlarm(getApplicationContext(), mEndTime, Action.START,
+						false);
 			}
 		});
 		endTimeFragment.show(getFragmentManager(), "EndTimePicker");
-	}
-
-	public void onApplyClick(View view) {
-		SharedPreferences sharedPref = getSharedPreferences(PREFERENCE_NAME,
-				MODE_PRIVATE);
-		SharedPreferences.Editor editor = sharedPref.edit();
-
-		editor.putString(START_TIME, mStartTime);
-		editor.putString(END_TIME, mEndTime);
-		editor.commit();
-		
-		Toast.makeText(getApplicationContext(), "Schedule Saved", Toast.LENGTH_LONG).show();
 	}
 
 	private void handleAlarm(Context context, String time, Action action,
@@ -171,6 +196,11 @@ public class DoNotDisturbActivity extends Activity {
 
 			manager.cancel(actionIntent);
 		}
+	}
+
+	private void setScheduleVisibility(int visible) {
+		mStartTimeRow.setVisibility(visible);
+		mEndTimeRow.setVisibility(visible);
 	}
 
 	private String formatTime(String inputTime, String inputFormat,
