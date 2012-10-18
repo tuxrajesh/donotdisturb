@@ -61,15 +61,14 @@ public class DoNotDisturbCallReceiver extends BroadcastReceiver {
 						.getString(TelephonyManager.EXTRA_INCOMING_NUMBER);
 				Log.v(TAG, phoneNumber);
 
-				if (phoneNumber.equalsIgnoreCase("8043800383")
-						|| phoneNumber.equalsIgnoreCase("7326685854")) {
-
-					Intent serviceIntent = new Intent(context,
-							DoNotDisturbCallService.class);
-					serviceIntent.putExtra("DoNotDisturbCallReceiver",
-							AudioManager.RINGER_MODE_NORMAL);
-					context.startService(serviceIntent);
-				}
+//				if (phoneNumber.equalsIgnoreCase("1234567890")) {
+//
+//					Intent serviceIntent = new Intent(context,
+//							DoNotDisturbCallService.class);
+//					serviceIntent.putExtra("DoNotDisturbCallReceiver",
+//							AudioManager.RINGER_MODE_NORMAL);
+//					context.startService(serviceIntent);
+//				}
 
 			} else {
 
