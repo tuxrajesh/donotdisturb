@@ -36,7 +36,7 @@ public class DoNotDisturbAlarmService extends IntentService {
 
 			Notification.Builder builder = new Notification.Builder(
 					getApplicationContext())
-					.setSmallIcon(R.drawable.ic_notify_dnd)
+					.setSmallIcon(R.drawable.ic_stat_notify)
 					.setContentTitle("Do Not Disturb")
 					.setContentText("Phone Silenced")
 					.setTicker("Do Not Disturb")
