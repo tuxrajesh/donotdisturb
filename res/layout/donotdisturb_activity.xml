@@ -1,65 +1,98 @@
-<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
 
-    <TableRow
-        android:id="@+id/switchRow"
+    <LinearLayout
+        android:id="@+id/row_on_off"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="28dip" >
+
+        <TextView
+            android:id="@+id/txt_donotdisturb"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name" />
+
+        <Switch
+            android:id="@+id/swt_enable"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onEnableClick"
+            android:textOff="@string/off"
+            android:textOn="@string/on" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/row_scheduled"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingBottom="10dip"
         android:paddingTop="28dip" >
 
-        <TextView
-            android:id="@+id/txt_schedule"
-            android:layout_weight="1"
-            android:gravity="right"
-            android:paddingRight="5dip"
-            android:text="@string/scheduled" />
+        <CheckBox
+            android:id="@+id/chk_scheduled"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/scheduled"
+            android:onClick="onScheduledClick" />
+    </LinearLayout>
 
-        <Switch
-            android:id="@+id/swt_enable"
-            android:layout_width="150dip"
-            android:onClick="onSwitchClick"
-            android:textOff="@string/off"
-            android:textOn="@string/on" />
-    </TableRow>
-
-    <TableRow
-        android:id="@+id/startTimeRow"
-        android:layout_height="wrap_content" >
+    <LinearLayout
+        android:id="@+id/row_time"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="10dip"
+        android:paddingTop="10dip" >
 
         <TextView
             android:id="@+id/txt_start_time"
-            android:layout_weight="1"
-            android:gravity="right"
-            android:paddingRight="5dip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="@string/start_time" />
 
         <Button
             android:id="@+id/btn_start_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="28dip"
             android:onClick="onStartTimePickClick" />
-    </TableRow>
-
-    <TableRow
-        android:id="@+id/endTimeRow"
-        android:layout_height="wrap_content" >
-
+        
         <TextView
             android:id="@+id/txt_end_time"
-            android:layout_weight="1"
-            android:gravity="right"
-            android:paddingRight="5dip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="@string/end_time" />
 
         <Button
             android:id="@+id/btn_end_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="28dip"
             android:onClick="onEndTimePickClick" />
-    </TableRow>
+        
+    </LinearLayout>
 
-</TableLayout>
+    <LinearLayout
+        android:id="@+id/row_allow_calls_from"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="10dip"
+        android:paddingTop="10dip" >
+
+        <TextView
+            android:id="@+id/txt_allow_calls_from"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/allow_calls_from" />
+
+        <Spinner
+            android:id="@+id/snr_allow_calls"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:prompt="@string/allow_calls_from"
+            android:spinnerMode="dialog" />
+    </LinearLayout>
+
+</LinearLayout>

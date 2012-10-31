@@ -22,8 +22,19 @@ public class DoNotDisturbAlarmService extends IntentService {
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.v(TAG, "onStartCommand");
 		Action action = (Action) intent
-				.getSerializableExtra("DoNotDisturbAlarmReceiver");
+				.getSerializableExtra(DoNotDisturbActivity.ACTION);
 
+		handleEnable(action);
+		stopSelf();
+		return 1;
+	}
+
+	@Override
+	protected void onHandleIntent(Intent intent) {
+		Log.v(TAG, "onHandleIntent");
+	}
+
+	private void handleEnable(Action action) {
 		NotificationManager notifyMgr = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
 		if (action == Action.START) {
@@ -31,8 +42,8 @@ public class DoNotDisturbAlarmService extends IntentService {
 
 			Intent notificationIntent = new Intent(this,
 					DoNotDisturbAlarmService.class);
-			PendingIntent contentIntent = PendingIntent.getService(this, 0,
-					notificationIntent, 0);
+			PendingIntent contentIntent = PendingIntent.getService(
+					getApplicationContext(), 0, notificationIntent, 0);
 
 			Notification.Builder builder = new Notification.Builder(
 					getApplicationContext())
@@ -55,15 +66,7 @@ public class DoNotDisturbAlarmService extends IntentService {
 
 			AudioManager manager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 			manager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
-			stopSelf();
 			Log.v(TAG, "Ringer MODE set to Normal");
 		}
-		return 1;
 	}
-
-	@Override
-	protected void onHandleIntent(Intent intent) {
-		Log.v(TAG, "onHandleIntent");
-	}
-
 }

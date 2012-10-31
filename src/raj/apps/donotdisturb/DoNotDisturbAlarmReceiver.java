@@ -14,10 +14,10 @@ public class DoNotDisturbAlarmReceiver extends BroadcastReceiver {
 		Log.v(TAG, "onReceive");
 
 		Action action = (Action) intent
-				.getSerializableExtra("DoNotDisturbActivity");
+				.getSerializableExtra(DoNotDisturbActivity.ACTION);
 
 		Intent serviceIntent = new Intent(context, DoNotDisturbAlarmService.class);
-		serviceIntent.putExtra(TAG, action);
+		serviceIntent.putExtra(DoNotDisturbActivity.ACTION, action);
 		context.startService(serviceIntent);
 
 	}

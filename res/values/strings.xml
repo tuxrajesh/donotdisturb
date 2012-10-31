@@ -7,5 +7,7 @@
     <string name="end_time">To </string>
     <string name="on">On</string>
     <string name="off">Off</string>
-
+    <string name="allow_repeated_calls">Allow Repeated Calls </string>
+    <string name="allow_calls_from">Allow Call From </string>
+    
 </resources>
