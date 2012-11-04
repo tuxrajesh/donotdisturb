@@ -35,6 +35,10 @@
                 <action android:name="android.intent.action.PHONE_STATE" />
             </intent-filter>
         </receiver>
+        <receiver android:name=".DoNotDisturbWidget">
+            <meta-data android:name="android.appwidget.provider"
+                	   android:resource="@xml/donotdisturb_appwidget_info" />
+        </receiver>
 
         <service android:name=".DoNotDisturbAlarmService" >
         </service>

@@ -33,7 +33,6 @@ public class DoNotDisturbActivity extends Activity {
 
 	private static final long RECURRING_INTERVAL = AlarmManager.INTERVAL_DAY;
 	private static final String TAG = "DoNotDisturbActivity";
-	final static int NOTIFY_ID = 1;
 
 	public static final String ACTION = "Action";
 	public static final String PREFERENCE_NAME = "DoNotDisturbSchedule";
@@ -42,6 +41,7 @@ public class DoNotDisturbActivity extends Activity {
 	public static final String ENABLED_FLAG = "EnabledFlag";
 	public static final String SCHEDULED_FLAG = "ScheduledFlag";
 	public static final String ALLOW_CALLS_FROM = "AllowCallsFrom";
+	public static final String NO_ONE = "-1 - No one";
 
 	private Boolean mEnabled;
 	private Boolean mScheduled;
@@ -281,12 +281,13 @@ public class DoNotDisturbActivity extends Activity {
 	private ArrayList<String> getAllowCallsList() {
 		ArrayList<String> contactGroups = new ArrayList<String>();
 		
-		contactGroups.add("No one");
+		contactGroups.add("-1 - No one");
 
 		Cursor groupCursor = getContentResolver().query(Groups.CONTENT_URI,
 				new String[] { Groups._ID, Groups.TITLE }, null, null, null);
 		while (groupCursor.moveToNext()) {
 			contactGroups.add(groupCursor.getString(groupCursor
+					.getColumnIndex(Groups._ID)) + " - " + groupCursor.getString(groupCursor
 					.getColumnIndex(Groups.TITLE)));
 		}
 
