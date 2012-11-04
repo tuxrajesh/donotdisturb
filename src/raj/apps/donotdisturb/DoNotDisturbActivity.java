@@ -29,11 +29,16 @@ import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.Toast;
 
+/**
+ * DoNotDisturbActivity: Setting activity for DoNotDisturb mode.
+ */
 public class DoNotDisturbActivity extends Activity {
 
+	// private constants
 	private static final long RECURRING_INTERVAL = AlarmManager.INTERVAL_DAY;
 	private static final String TAG = "DoNotDisturbActivity";
 
+	// public constants
 	public static final String ACTION = "Action";
 	public static final String PREFERENCE_NAME = "DoNotDisturbSchedule";
 	public static final String START_TIME = "StartTime";
@@ -43,6 +48,7 @@ public class DoNotDisturbActivity extends Activity {
 	public static final String ALLOW_CALLS_FROM = "AllowCallsFrom";
 	public static final String NO_ONE = "-1 - No one";
 
+	// private variables
 	private Boolean mEnabled;
 	private Boolean mScheduled;
 	private String mStartTime;
@@ -55,6 +61,9 @@ public class DoNotDisturbActivity extends Activity {
 	private Button mEnd;
 	private Spinner mAllowCallFrom;
 
+	/**
+	 * onCreate(): set/restore the values of controls from SharedPreferences
+	 */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -81,8 +90,12 @@ public class DoNotDisturbActivity extends Activity {
 		mStart.setText(formatTime(mStartTime, "hh:mm", "hh:mm a"));
 		mEnd.setText(formatTime(mEndTime, "hh:mm", "hh:mm a"));
 		
+		// allowCallFrom spinner handler
 		mAllowCallFrom.setOnItemSelectedListener(new OnItemSelectedListener() {
 
+			/**
+			 * onItemSelected() : add to the SharedPreference
+			 */
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view,
 					int position, long id) {
@@ -107,7 +120,6 @@ public class DoNotDisturbActivity extends Activity {
 				getApplicationContext(), R.layout.spinner, getAllowCallsList());
 		adapter.setDropDownViewResource(R.layout.spinner_dropdown);
 		mAllowCallFrom.setAdapter(adapter);
-		
 		mAllowCallFrom.setSelection(adapter.getPosition(mAllowCalls));
 	}
 
@@ -117,24 +129,34 @@ public class DoNotDisturbActivity extends Activity {
 		return true;
 	}
 
+	/**
+	 * onEnableClick(): handles the DoNotDisturb Mode enable/disable
+	 * @param view
+	 */
 	public void onEnableClick(View view) {
 		boolean on = ((CompoundButton) view).isChecked();
 
 		SharedPreferences sharedPref = getSharedPreferences(PREFERENCE_NAME,
 				MODE_PRIVATE);
 
+		// enable DoNotDisturb mode
 		if (on) {
 			handleEnable(Action.START);
-		} else {
+		} else { // disable DoNotDisturb mode
 			handleEnable(Action.END);
 		}
 
+		// persist the enable/disable preference
 		SharedPreferences.Editor editor = sharedPref.edit();
 
 		editor.putBoolean(ENABLED_FLAG, on);
 		editor.commit();
 	}
 
+	/**
+	 * onScheduledClick() : enable/disable schedule
+	 * @param view
+	 */
 	public void onScheduledClick(View view) {
 		boolean on = ((CheckBox) view).isChecked();
 
@@ -147,7 +169,7 @@ public class DoNotDisturbActivity extends Activity {
 
 		String toastMessage = null;
 
-		if (on) {
+		if (on) { // onEnable : trigger alarm to enable DoNotDisturb mode
 
 			handleEnable(Action.END);
 			handleAlarm(this, mStartTime, Action.START, true);
@@ -157,7 +179,7 @@ public class DoNotDisturbActivity extends Activity {
 					formatTime(mStartTime, "hh:mm", "hh:mm a"),
 					formatTime(mEndTime, "hh:mm", "hh:mm a"));
 
-		} else {
+		} else { // onDisable : trigger alarm to disable DoNotDisturb mode
 
 			handleEnable(Action.START);
 			handleAlarm(this, mStartTime, Action.START, false);
@@ -166,7 +188,8 @@ public class DoNotDisturbActivity extends Activity {
 			toastMessage = "Schedule Cancelled";
 
 		}
-
+		
+		// persist preferences
 		SharedPreferences.Editor editor = sharedPref.edit();
 
 		editor.putBoolean(SCHEDULED_FLAG, on);
@@ -176,10 +199,21 @@ public class DoNotDisturbActivity extends Activity {
 				.show();
 	}
 
+	/**
+	 * onStartTimePickClick() : set the Start Time for Schedule
+	 * @param view
+	 */
 	public void onStartTimePickClick(View view) {
+		
+		// create the TimePickerFragment dialog
 		TimePickerFragment startTimeFragment = new TimePickerFragment();
+		
+		// setOnTimePick handler
 		startTimeFragment.setOnTimePickedListener(new OnTimePickedListener() {
 
+			/**
+			 * onTimePicked(): persist preference and re-schedule alarm
+			 */
 			@Override
 			public void onTimePicked(int hourOfDay, int minute) {
 				mStartTime = String.format("%d:%d", hourOfDay, minute);
@@ -199,10 +233,21 @@ public class DoNotDisturbActivity extends Activity {
 		startTimeFragment.show(getFragmentManager(), "StartTimePicker");
 	}
 
+	/**
+	 * onEndTimePickClick(): set the End Time of the schedule
+	 * @param view
+	 */
 	public void onEndTimePickClick(View view) {
+		
+		// create the TimePickerFragment dialog
 		TimePickerFragment endTimeFragment = new TimePickerFragment();
+		
+		// setOnTimePick handler
 		endTimeFragment.setOnTimePickedListener(new OnTimePickedListener() {
 
+			/**
+			 * onTimePicked(): persist preference and re-schedule alarm
+			 */
 			@Override
 			public void onTimePicked(int hourOfDay, int minute) {
 				mEndTime = String.format("%d:%d", hourOfDay, minute);
@@ -222,6 +267,10 @@ public class DoNotDisturbActivity extends Activity {
 		endTimeFragment.show(getFragmentManager(), "EndTimePicker");
 	}
 
+	/**
+	 * handleEnable(): trigger the DoNotDisturbAlarmService with intended action
+	 * @param action
+	 */
 	private void handleEnable(Action action) {
 		Context context = getApplicationContext();
 		Intent serviceIntent = new Intent(getApplicationContext(),
@@ -230,6 +279,13 @@ public class DoNotDisturbActivity extends Activity {
 		context.startService(serviceIntent);
 	}
 
+	/**
+	 * handleAlarm() : cancel/set the recurring alarm for DoNotDisturb mode
+	 * @param context
+	 * @param time
+	 * @param action
+	 * @param enable
+	 */
 	private void handleAlarm(Context context, String time, Action action,
 			Boolean enable) {
 		Log.v(TAG, "handleAlarm");
@@ -261,6 +317,13 @@ public class DoNotDisturbActivity extends Activity {
 		}
 	}
 
+	/**
+	 * formatTime() : format the given time from input to output format
+	 * @param inputTime
+	 * @param inputFormat
+	 * @param outputFormat
+	 * @return
+	 */
 	private String formatTime(String inputTime, String inputFormat,
 			String outputFormat) {
 		String outputTime = null;
@@ -278,6 +341,10 @@ public class DoNotDisturbActivity extends Activity {
 		return outputTime;
 	}
 
+	/**
+	 * getAllowCallsList() : get the groups from the phone contacts
+	 * @return
+	 */
 	private ArrayList<String> getAllowCallsList() {
 		ArrayList<String> contactGroups = new ArrayList<String>();
 		

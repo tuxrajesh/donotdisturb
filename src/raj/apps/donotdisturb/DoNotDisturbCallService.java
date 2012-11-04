@@ -98,12 +98,21 @@ public class DoNotDisturbCallService extends IntentService {
 							Integer.parseInt(endTime.split(":")[0]));
 					endCalendar.set(Calendar.MINUTE,
 							Integer.parseInt(endTime.split(":")[1]));
+					
+					// Scenario #1: s = 23, e = 6, c = 2
+					if(startCalendar.getTime().after(endCalendar.getTime())){
+						if(currentCalendar.getTime().before(endCalendar.getTime())){
+						
+							setPhoneRingerMode(state, incomingNumber,
+									allowCallsFrom);
+						}
+					} else { // Scenario #2: s = 3, e = 5, c = 4
+						if (currentCalendar.after(startCalendar)
+								&& endCalendar.after(currentCalendar)) {
 
-					if (currentCalendar.after(startCalendar)
-							&& endCalendar.after(currentCalendar)) {
-
-						setPhoneRingerMode(state, incomingNumber,
-								allowCallsFrom);
+							setPhoneRingerMode(state, incomingNumber,
+									allowCallsFrom);
+						}
 					}
 				}
 			}

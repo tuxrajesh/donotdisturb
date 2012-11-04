@@ -5,10 +5,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+/**
+ * BroadcastReceiver that receives DoNotDisturb alarm.
+ */
 public class DoNotDisturbAlarmReceiver extends BroadcastReceiver {
 
 	final static String TAG = "DoNotDisturbAlarmReceiver";
 
+	/**
+	 * onReceive() : start the DoNotDisturbAlarmService
+	 */
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		Log.v(TAG, "onReceive");
