@@ -3,6 +3,6 @@
     android:minWidth="294dp"
     android:minHeight="72dp"
     android:initialLayout="@layout/donotdisturb_widget"
-    android:configure="raj.app.donotdisturb.DoNotDisturbActivity" 
+    android:configure="raj.apps.donotdisturb.DoNotDisturbActivity" 
     android:resizeMode="none">
 </appwidget-provider>
