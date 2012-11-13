@@ -8,6 +8,7 @@
         android:id="@+id/row_on_off"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:orientation="horizontal"
         android:paddingTop="28dip" >
 
@@ -30,6 +31,7 @@
         android:id="@+id/row_scheduled"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:paddingBottom="10dip"
         android:paddingTop="28dip" >
 
@@ -45,8 +47,7 @@
         android:id="@+id/row_time"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingBottom="10dip"
-        android:paddingTop="10dip" >
+        android:gravity="center">
 
         <TextView
             android:id="@+id/txt_start_time"
@@ -78,8 +79,9 @@
         android:id="@+id/row_allow_calls_from"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:paddingBottom="10dip"
-        android:paddingTop="10dip" >
+        android:paddingTop="28dip">
 
         <TextView
             android:id="@+id/txt_allow_calls_from"
