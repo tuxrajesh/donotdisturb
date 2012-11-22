@@ -2,36 +2,23 @@ package raj.apps.donotdisturb;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
-import raj.apps.donotdisturb.TimePickerFragment.OnTimePickedListener;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
-import android.provider.ContactsContract.Groups;
+import android.preference.Preference;
+import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.Menu;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.LinearLayout;
-import android.widget.Spinner;
-import android.widget.Switch;
-import android.widget.Toast;
 
 /**
- * DoNotDisturbActivity: Setting activity for DoNotDisturb mode.
+ * DoNotDisturbActivity: Settings activity for DoNotDisturb mode.
  */
 public class DoNotDisturbActivity extends Activity {
 
@@ -40,28 +27,24 @@ public class DoNotDisturbActivity extends Activity {
 	private static final String TAG = "DoNotDisturbActivity";
 
 	// public constants
+	public static final String KEY_PREF_MODE = "pref_mode";
+	public static final String KEY_PREF_SCHEDULED = "pref_scheduled";
+	public static final String KEY_PREF_FROM = "pref_from";
+	public static final String KEY_PREF_TO = "pref_to";
+	public static final String KEY_ALLOW_CALLS_FROM = "pref_allow_calls_from";
+
+	private static OnSharedPreferenceChangeListener onSharedPreferenceChangeListener;
+
+	protected DoNotDisturbSettingsFragment mSettingsFragment;
+
 	public static final String ACTION = "Action";
-	public static final String PREFERENCE_NAME = "DoNotDisturbSchedule";
-	public static final String START_TIME = "StartTime";
-	public static final String END_TIME = "EndTime";
-	public static final String ENABLED_FLAG = "EnabledFlag";
-	public static final String SCHEDULED_FLAG = "ScheduledFlag";
-	public static final String ALLOW_CALLS_FROM = "AllowCallsFrom";
-	public static final String NO_ONE = "-1 - No one";
+	public static final String NO_ONE = "0 - No one";
 
 	// private variables
 	private Boolean mEnabled;
 	private Boolean mScheduled;
-	private String mStartTime;
-	private String mEndTime;
-	private String mAllowCalls;
-
-	private Switch mEnable;
-	private CheckBox mSchedule;
-	private Button mStart;
-	private Button mEnd;
-	private Spinner mAllowCallFrom;
-	private LinearLayout mTimeRow;
+	private String mFrom;
+	private String mTo;
 
 	/**
 	 * onCreate(): set/restore the values of controls from SharedPreferences
@@ -69,255 +52,130 @@ public class DoNotDisturbActivity extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.donotdisturb_activity);
 
-		mEnable = (Switch) findViewById(R.id.swt_enable);
-		mSchedule = (CheckBox) findViewById(R.id.chk_scheduled);
-		mStart = (Button) findViewById(R.id.btn_start_time);
-		mEnd = (Button) findViewById(R.id.btn_end_time);
-		mAllowCallFrom = (Spinner) findViewById(R.id.snr_allow_calls);
-		mTimeRow = (LinearLayout) findViewById(R.id.row_time);
+		mSettingsFragment = new DoNotDisturbSettingsFragment();
 
-		// Restore preferences
-		SharedPreferences sharedPref = getSharedPreferences(PREFERENCE_NAME,
-				MODE_PRIVATE);
-
-		mEnabled = sharedPref.getBoolean(ENABLED_FLAG, false);
-		mScheduled = sharedPref.getBoolean(SCHEDULED_FLAG, false);
-		mStartTime = sharedPref.getString(START_TIME, "23:00");
-		mEndTime = sharedPref.getString(END_TIME, "06:00");
-		mAllowCalls = sharedPref.getString(ALLOW_CALLS_FROM, "No one");
-
-		mEnable.setChecked(mEnabled);
-		mSchedule.setChecked(mScheduled);
-		mStart.setText(formatTime(mStartTime, "hh:mm", "hh:mm a"));
-		mEnd.setText(formatTime(mEndTime, "hh:mm", "hh:mm a"));
-
-		// Show/hide time row
-		if (mScheduled) {
-			mTimeRow.setVisibility(View.VISIBLE);
-		} else {
-			mTimeRow.setVisibility(View.GONE);
-		}
-
-		// allowCallFrom spinner handler
-		mAllowCallFrom.setOnItemSelectedListener(new OnItemSelectedListener() {
-
-			/**
-			 * onItemSelected() : add to the SharedPreference
-			 */
-			@Override
-			public void onItemSelected(AdapterView<?> parent, View view,
-					int position, long id) {
-				mAllowCalls = parent.getItemAtPosition(position).toString();
-
-				SharedPreferences sharedPref = getSharedPreferences(
-						PREFERENCE_NAME, MODE_PRIVATE);
-				SharedPreferences.Editor editor = sharedPref.edit();
-
-				editor.putString(ALLOW_CALLS_FROM, mAllowCalls);
-				editor.commit();
-			}
+		// Listener for change to any settings
+		onSharedPreferenceChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
 
 			@Override
-			public void onNothingSelected(AdapterView<?> parent) {
+			public void onSharedPreferenceChanged(
+					SharedPreferences sharedPreferences, String key) {
+				Log.v(TAG, String.format("%s : %s",
+						"onSharedPreferenceChanged", key));
 
-			}
-
-		});
-
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-				getApplicationContext(), R.layout.spinner, getAllowCallsList());
-		adapter.setDropDownViewResource(R.layout.spinner_dropdown);
-		mAllowCallFrom.setAdapter(adapter);
-		mAllowCallFrom.setSelection(adapter.getPosition(mAllowCalls));
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.donotdisturb_activity, menu);
-		return true;
-	}
-
-	/**
-	 * onEnableClick(): handles the DoNotDisturb Mode enable/disable
-	 * 
-	 * @param view
-	 */
-	public void onEnableClick(View view) {
-		boolean on = ((CompoundButton) view).isChecked();
-
-		SharedPreferences sharedPref = getSharedPreferences(PREFERENCE_NAME,
-				MODE_PRIVATE);
-
-		// persist the enable/disable preference
-		SharedPreferences.Editor editor = sharedPref.edit();
-		editor.putBoolean(ENABLED_FLAG, on);
-		editor.commit();
-
-		handleModeChange();
-	}
-
-	/**
-	 * onScheduledClick() : enable/disable schedule
-	 * 
-	 * @param view
-	 */
-	public void onScheduledClick(View view) {
-		boolean on = ((CheckBox) view).isChecked();
-
-		// Get Preferences
-		SharedPreferences sharedPref = getSharedPreferences(PREFERENCE_NAME,
-				MODE_PRIVATE);
-
-		// persist preferences
-		SharedPreferences.Editor editor = sharedPref.edit();
-		editor.putBoolean(SCHEDULED_FLAG, on);
-		editor.commit();
-
-		mStartTime = sharedPref.getString(START_TIME, "23:00");
-		mEndTime = sharedPref.getString(END_TIME, "06:00");
-
-		String toastMessage = null;
-
-		if (on) { // onEnable : trigger alarm to enable DoNotDisturb mode
-
-			handleModeChange();
-			mTimeRow.setVisibility(View.VISIBLE);
-			toastMessage = String.format("Schedule set between %s and %s",
-					formatTime(mStartTime, "hh:mm", "hh:mm a"),
-					formatTime(mEndTime, "hh:mm", "hh:mm a"));
-
-		} else { // onDisable : trigger alarm to disable DoNotDisturb mode
-
-			handleModeChange();
-			mTimeRow.setVisibility(View.GONE);
-			toastMessage = "Schedule Cancelled";
-
-		}
-
-		Toast.makeText(getApplicationContext(), toastMessage, Toast.LENGTH_LONG)
-				.show();
-	}
-
-	/**
-	 * onStartTimePickClick() : set the Start Time for Schedule
-	 * 
-	 * @param view
-	 */
-	public void onStartTimePickClick(View view) {
-
-		// create the TimePickerFragment dialog
-		TimePickerFragment startTimeFragment = new TimePickerFragment();
-
-		// setOnTimePick handler
-		startTimeFragment.setOnTimePickedListener(new OnTimePickedListener() {
-
-			/**
-			 * onTimePicked(): persist preference and re-schedule alarm
-			 */
-			@Override
-			public void onTimePicked(int hourOfDay, int minute) {
-				mStartTime = String.format("%d:%d", hourOfDay, minute);
-				mStart.setText(formatTime(mStartTime, "hh:mm", "hh:mm a"));
-
-				SharedPreferences sharedPref = getSharedPreferences(
-						PREFERENCE_NAME, MODE_PRIVATE);
-				SharedPreferences.Editor editor = sharedPref.edit();
-
-				editor.putString(START_TIME, mStartTime);
-				editor.commit();
-
-				handleModeChange();
-			}
-		});
-		startTimeFragment.show(getFragmentManager(), "StartTimePicker");
-	}
-
-	/**
-	 * onEndTimePickClick(): set the End Time of the schedule
-	 * 
-	 * @param view
-	 */
-	public void onEndTimePickClick(View view) {
-
-		// create the TimePickerFragment dialog
-		TimePickerFragment endTimeFragment = new TimePickerFragment();
-
-		// setOnTimePick handler
-		endTimeFragment.setOnTimePickedListener(new OnTimePickedListener() {
-
-			/**
-			 * onTimePicked(): persist preference and re-schedule alarm
-			 */
-			@Override
-			public void onTimePicked(int hourOfDay, int minute) {
-				mEndTime = String.format("%d:%d", hourOfDay, minute);
-				mEnd.setText(formatTime(mEndTime, "hh:mm", "hh:mm a"));
-
-				SharedPreferences sharedPref = getSharedPreferences(
-						PREFERENCE_NAME, MODE_PRIVATE);
-				SharedPreferences.Editor editor = sharedPref.edit();
-
-				editor.putString(END_TIME, mEndTime);
-				editor.commit();
-
-				handleModeChange();
-			}
-		});
-		endTimeFragment.show(getFragmentManager(), "EndTimePicker");
-	}
-
-	/**
-	 * handleModeChange() : handle enable/schedule change
-	 * 
-	 * @param context
-	 * @param time
-	 * @param action
-	 * @param enable
-	 */
-	private void handleModeChange() {
-		Log.v(TAG, "handleModeChange");
-
-		// get shared preferences
-		SharedPreferences sharedPref = getSharedPreferences(PREFERENCE_NAME,
-				MODE_PRIVATE);
-
-		mEnabled = sharedPref.getBoolean(ENABLED_FLAG, false);
-		mScheduled = sharedPref.getBoolean(SCHEDULED_FLAG, false);
-		mStartTime = sharedPref.getString(START_TIME, "23:00");
-		mEndTime = sharedPref.getString(END_TIME, "06:00");
-		mAllowCalls = sharedPref.getString(ALLOW_CALLS_FROM, "No one");
-
-		Context context = getApplicationContext();
-
-		if (mEnabled) { // on enabled
-
-			if (mScheduled) { // on enabled and scheduled
-
-				// set alarm with START for start time
-				Calendar startCalendar = getCalendar(mStartTime);
-				changeAlarm(context, startCalendar, Action.START, mEnabled,
-						true);
-
-				// set alarm with END for end time
-				Calendar endCalendar = getCalendar(mEndTime);
-				changeAlarm(context, endCalendar, Action.END, mEnabled, true);
-
-			} else { // on enabled and not scheduled
-
-				// set alarm with START for current time
-				Calendar currentCalendar = Calendar.getInstance();
-				changeAlarm(context, currentCalendar, Action.START, mEnabled,
+				mEnabled = sharedPreferences.getBoolean(KEY_PREF_MODE, false);
+				mScheduled = sharedPreferences.getBoolean(KEY_PREF_SCHEDULED,
 						false);
+				mFrom = sharedPreferences.getString(KEY_PREF_FROM, "23:00");
+				mTo = sharedPreferences.getString(KEY_PREF_TO, "06:00");
+				
+				Preference fromPref = mSettingsFragment
+						.findPreference(KEY_PREF_FROM);
+
+				if (fromPref != null) {
+					fromPref.setSummary(formatTime(mFrom, "hh:mm",
+							"hh:mm a"));
+				}
+
+				Preference toPref = mSettingsFragment
+						.findPreference(KEY_PREF_TO);
+
+				if (toPref != null) {
+					toPref.setSummary(formatTime(mTo, "hh:mm",
+							"hh:mm a"));
+				}
+				
+				Context context = getApplicationContext();
+
+				if (mEnabled) { // on enabled
+
+					if (mScheduled) { // on enabled and scheduled
+
+						// cancel any existing one-time alarms
+						Calendar currentCalendar = Calendar.getInstance();
+						changeAlarm(context, currentCalendar, Action.END, true,
+								false);
+
+						// set alarm with START for start time
+						Calendar startCalendar = getCalendar(mFrom);
+						changeAlarm(context, startCalendar, Action.START,
+								false, true);
+
+						// set alarm with END for end time
+						Calendar endCalendar = getCalendar(mTo);
+						changeAlarm(context, endCalendar, Action.END, false,
+								true);
+
+					} else { // on enabled and not scheduled
+
+						// cancel any existing scheduled alarms
+						Calendar startCalendar = getCalendar(mFrom);
+						changeAlarm(context, startCalendar, Action.START, true,
+								true);
+
+						Calendar endCalendar = getCalendar(mTo);
+						changeAlarm(context, endCalendar, Action.END, true,
+								true);
+
+						// set alarm with START for current time
+						Calendar currentCalendar = Calendar.getInstance();
+						changeAlarm(context, currentCalendar, Action.START,
+								false, false);
+					}
+
+				} else { // on disabled
+
+					// cancel any existing scheduled alarms
+					Calendar startCalendar = getCalendar(mFrom);
+					changeAlarm(context, startCalendar, Action.START, true,
+							true);
+
+					Calendar endCalendar = getCalendar(mTo);
+					changeAlarm(context, endCalendar, Action.END, true, true);
+
+					// set alarm with START for current time
+					Calendar currentCalendar = Calendar.getInstance();
+					changeAlarm(context, currentCalendar, Action.END, true,
+							false);
+				}
 			}
+		};
 
-		} else { // on disabled
+		SharedPreferences sharedPreferences = PreferenceManager
+				.getDefaultSharedPreferences(this);
+		sharedPreferences
+				.registerOnSharedPreferenceChangeListener(onSharedPreferenceChangeListener);
 
-			// set alarm with START for current time
-			Calendar currentCalendar = Calendar.getInstance();
-			changeAlarm(context, currentCalendar, Action.END, mEnabled, false);
-		}
+		// Display the Settings Fragment
+		getFragmentManager().beginTransaction()
+				.replace(android.R.id.content, mSettingsFragment).commit();
+	}
+
+	/**
+	 * onResume() : register sharedPreferenceChange listener
+	 */
+	@Override
+	protected void onResume() {
+		super.onResume();
+
+		SharedPreferences sharedPreferences = PreferenceManager
+				.getDefaultSharedPreferences(this);
+		sharedPreferences
+				.registerOnSharedPreferenceChangeListener(onSharedPreferenceChangeListener);
+	}
+
+	/**
+	 * onPause() : unregister sharedPreferenceChange listener
+	 */
+	@Override
+	protected void onPause() {
+		super.onPause();
+
+		SharedPreferences sharedPreferences = PreferenceManager
+				.getDefaultSharedPreferences(this);
+		sharedPreferences
+				.registerOnSharedPreferenceChangeListener(onSharedPreferenceChangeListener);
 	}
 
 	/**
@@ -343,12 +201,12 @@ public class DoNotDisturbActivity extends Activity {
 	 * @param context
 	 * @param calendar
 	 * @param action
-	 * @param enable
+	 * @param cancel
 	 * @param repeating
 	 */
 	private void changeAlarm(Context context, Calendar calendar, Action action,
-			Boolean enable, Boolean repeating) {
-		Log.v(TAG, "handleAlarm");
+			boolean cancel, boolean repeating) {
+		Log.v(TAG, "changeAlarm");
 
 		// Alarm Manager initialize
 		AlarmManager manager = (AlarmManager) context
@@ -361,23 +219,36 @@ public class DoNotDisturbActivity extends Activity {
 				action.ordinal(), receiverIntent,
 				PendingIntent.FLAG_UPDATE_CURRENT);
 
-		if (enable) { // on enable
+		if (cancel) { // cancel alarm
 
-			if (repeating) { // on repeating
+			manager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+					actionIntent);
+
+			manager.cancel(actionIntent);
+
+			Log.v(TAG, String.format("%s : %s", "cancelled alarm", calendar
+					.getTime().toString()));
+
+		} else { // create alarm
+
+			if (repeating) { // scheduled
 
 				manager.setRepeating(AlarmManager.RTC_WAKEUP,
 						calendar.getTimeInMillis(), RECURRING_INTERVAL,
 						actionIntent);
-			} else { // on one-time
+
+				Log.v(TAG, String.format("%s : %s", "created repeating alarm",
+						calendar.getTime().toString()));
+
+			} else { // one-time
 
 				manager.set(AlarmManager.RTC_WAKEUP,
 						calendar.getTimeInMillis(), actionIntent);
+
+				Log.v(TAG, String.format("%s : %s", "created one-time alarm",
+						calendar.getTime().toString()));
+
 			}
-
-		} else { // on disable
-
-			manager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
-					actionIntent);
 		}
 	}
 
@@ -389,7 +260,7 @@ public class DoNotDisturbActivity extends Activity {
 	 * @param outputFormat
 	 * @return
 	 */
-	private String formatTime(String inputTime, String inputFormat,
+	public static String formatTime(String inputTime, String inputFormat,
 			String outputFormat) {
 		String outputTime = null;
 
@@ -405,28 +276,4 @@ public class DoNotDisturbActivity extends Activity {
 
 		return outputTime;
 	}
-
-	/**
-	 * getAllowCallsList() : get the groups from the phone contacts
-	 * 
-	 * @return
-	 */
-	private ArrayList<String> getAllowCallsList() {
-		ArrayList<String> contactGroups = new ArrayList<String>();
-
-		contactGroups.add("-1 - No one");
-
-		Cursor groupCursor = getContentResolver().query(Groups.CONTENT_URI,
-				new String[] { Groups._ID, Groups.TITLE }, null, null, null);
-		while (groupCursor.moveToNext()) {
-			contactGroups.add(groupCursor.getString(groupCursor
-					.getColumnIndex(Groups._ID))
-					+ " - "
-					+ groupCursor.getString(groupCursor
-							.getColumnIndex(Groups.TITLE)));
-		}
-
-		return contactGroups;
-	}
-
 }

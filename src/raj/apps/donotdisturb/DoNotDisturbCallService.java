@@ -10,6 +10,7 @@ import android.database.Cursor;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.provider.ContactsContract.CommonDataKinds.GroupMembership;
 import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.Data;
@@ -47,20 +48,21 @@ public class DoNotDisturbCallService extends IntentService {
 				.getString(TelephonyManager.EXTRA_INCOMING_NUMBER);
 
 		Context context = getApplicationContext();
-		SharedPreferences sharedPref = context.getSharedPreferences(
-				DoNotDisturbActivity.PREFERENCE_NAME, Context.MODE_PRIVATE);
+
+		SharedPreferences sharedPref = PreferenceManager
+				.getDefaultSharedPreferences(context);
 
 		// get sharedPreferences from DoNotDisturbActivity
-		String startTime = sharedPref.getString(
-				DoNotDisturbActivity.START_TIME, "23:00");
-		String endTime = sharedPref.getString(DoNotDisturbActivity.END_TIME,
-				"06:00");
 		Boolean enabled = sharedPref.getBoolean(
-				DoNotDisturbActivity.ENABLED_FLAG, false);
+				DoNotDisturbActivity.KEY_PREF_MODE, false);
 		Boolean scheduled = sharedPref.getBoolean(
-				DoNotDisturbActivity.SCHEDULED_FLAG, false);
+				DoNotDisturbActivity.KEY_PREF_SCHEDULED, false);
+		String fromTime = sharedPref.getString(
+				DoNotDisturbActivity.KEY_PREF_FROM, "23:00");
+		String toTime = sharedPref.getString(DoNotDisturbActivity.KEY_PREF_TO,
+				"06:00");
 		String allowCallsFrom = sharedPref.getString(
-				DoNotDisturbActivity.ALLOW_CALLS_FROM, "No one");
+				DoNotDisturbActivity.KEY_ALLOW_CALLS_FROM, DoNotDisturbActivity.NO_ONE);
 
 		// DoNotDisturb mode NOT_ENABLED, do nothing
 		if (!enabled) {
@@ -89,20 +91,21 @@ public class DoNotDisturbCallService extends IntentService {
 
 					Calendar startCalendar = Calendar.getInstance();
 					startCalendar.set(Calendar.HOUR_OF_DAY,
-							Integer.parseInt(startTime.split(":")[0]));
+							Integer.parseInt(fromTime.split(":")[0]));
 					startCalendar.set(Calendar.MINUTE,
-							Integer.parseInt(startTime.split(":")[1]));
+							Integer.parseInt(fromTime.split(":")[1]));
 
 					Calendar endCalendar = Calendar.getInstance();
 					endCalendar.set(Calendar.HOUR_OF_DAY,
-							Integer.parseInt(endTime.split(":")[0]));
+							Integer.parseInt(toTime.split(":")[0]));
 					endCalendar.set(Calendar.MINUTE,
-							Integer.parseInt(endTime.split(":")[1]));
-					
+							Integer.parseInt(toTime.split(":")[1]));
+
 					// Scenario #1: s = 23, e = 6, c = 2
-					if(startCalendar.getTime().after(endCalendar.getTime())){
-						if(currentCalendar.getTime().before(endCalendar.getTime())){
-						
+					if (startCalendar.getTime().after(endCalendar.getTime())) {
+						if (currentCalendar.getTime().before(
+								endCalendar.getTime())) {
+
 							setPhoneRingerMode(state, incomingNumber,
 									allowCallsFrom);
 						}
@@ -129,10 +132,10 @@ public class DoNotDisturbCallService extends IntentService {
 	 */
 	private void setPhoneRingerMode(String state, String incomingNumber,
 			String allowCallsFrom) {
-		
+
 		// if state is RINGING, then worry about incoming number
 		if (state.equalsIgnoreCase(TelephonyManager.EXTRA_STATE_RINGING)) {
-			
+
 			// if calls is allowed from number, ring
 			if (isCallAllowedFrom(incomingNumber, allowCallsFrom)) {
 				setRingerMode(AudioManager.RINGER_MODE_NORMAL);
@@ -145,7 +148,8 @@ public class DoNotDisturbCallService extends IntentService {
 	}
 
 	/**
-	 * isCallAllowedFrom(): check if call is allowed from number based on user selection
+	 * isCallAllowedFrom(): check if call is allowed from number based on user
+	 * selection
 	 * 
 	 * @param incomingNumber
 	 * @param allowCallsFrom
@@ -154,7 +158,7 @@ public class DoNotDisturbCallService extends IntentService {
 	private Boolean isCallAllowedFrom(String incomingNumber,
 			String allowCallsFrom) {
 
-		int allowCallsGroupId = -1;
+		int allowCallsGroupId = 0;
 
 		// get allowed group ID
 		Cursor groupCursor = getContentResolver().query(Groups.CONTENT_URI,
@@ -174,7 +178,7 @@ public class DoNotDisturbCallService extends IntentService {
 		}
 
 		// allows group is no-one; return
-		if (allowCallsGroupId == -1) {
+		if (allowCallsGroupId == 0) {
 			return false;
 		}
 
@@ -214,6 +218,7 @@ public class DoNotDisturbCallService extends IntentService {
 
 	/**
 	 * setRingerMode() : set AudioManager setting
+	 * 
 	 * @param ringerMode
 	 */
 	private void setRingerMode(int ringerMode) {

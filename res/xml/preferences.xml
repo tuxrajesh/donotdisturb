@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="pref_mode"
+        android:switchTextOff="@string/switch_off"
+        android:switchTextOn="@string/switch_on"
+        android:title="@string/app_name" />
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:dependency="pref_mode"
+        android:key="pref_scheduled"
+        android:summary="@string/pref_summary_scheduled"
+        android:title="@string/pref_title_scheduled" />
+
+    <raj.apps.donotdisturb.TimePreference
+        android:defaultValue="23:00"
+        android:dependency="pref_scheduled"
+        android:key="pref_from"
+        android:title="@string/pref_title_from" />
+    <raj.apps.donotdisturb.TimePreference
+        android:defaultValue="06:00"
+        android:dependency="pref_scheduled"
+        android:key="pref_to"
+        android:title="@string/pref_title_to" />
+
+    <ListPreference
+        android:defaultValue="0 - No one"
+        android:dialogTitle="@string/pref_title_allow_calls_from"
+        android:key="pref_allow_calls_from"
+        android:title="@string/pref_title_allow_calls_from" />
+
+</PreferenceScreen>
