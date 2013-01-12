@@ -29,12 +29,12 @@ public class DoNotDisturbSettingsFragment extends PreferenceFragment {
 		// Load preferences from XML resource
 		addPreferencesFromResource(R.xml.preferences);
 
-		// Set default on the From and To Time
-		findPreference(DoNotDisturbActivity.KEY_PREF_FROM).setSummary(
-				DoNotDisturbActivity.formatTime("23:00", "hh:mm", "hh:mm a"));
-
-		findPreference(DoNotDisturbActivity.KEY_PREF_TO).setSummary(
-				DoNotDisturbActivity.formatTime("06:00", "hh:mm", "hh:mm a"));
+		// Set summary on the From and To Time
+		TimePreference fromTime = (TimePreference)findPreference(DoNotDisturbActivity.KEY_PREF_FROM);
+		fromTime.setSummary(DoNotDisturbActivity.formatTime(fromTime.getValue(), "hh:mm", "hh:mm a"));
+		
+		TimePreference toTime = (TimePreference)findPreference(DoNotDisturbActivity.KEY_PREF_TO);
+		toTime.setSummary(DoNotDisturbActivity.formatTime(toTime.getValue(), "hh:mm", "hh:mm a"));
 
 		// Setup entries for the list preference
 		ArrayList<String> allowFrom = getAllowCallsList();
