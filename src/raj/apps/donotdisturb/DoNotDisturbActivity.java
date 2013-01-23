@@ -192,6 +192,7 @@ public class DoNotDisturbActivity extends Activity {
 		Calendar calendar = Calendar.getInstance();
 		calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
 		calendar.set(Calendar.MINUTE, startMinute);
+		calendar.set(Calendar.SECOND, 0);
 		return calendar;
 	}
 

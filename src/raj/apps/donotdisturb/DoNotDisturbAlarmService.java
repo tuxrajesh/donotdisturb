@@ -70,6 +70,7 @@ public class DoNotDisturbAlarmService extends IntentService {
 					.setTicker("Do Not Disturb")
 					.setContentIntent(contentIntent);
 			Notification notification = builder.getNotification();
+			notification.flags = Notification.FLAG_ONGOING_EVENT;
 			notifyMgr.notify(NOTIFY_ID, notification);
 
 			// silence phone
