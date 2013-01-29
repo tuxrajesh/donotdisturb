@@ -7,11 +7,12 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 
 /**
- * Service class to receive and process DoNotDisturb alarm.
- * set ringer mode to silence/ring based on intent
+ * Service class to receive and process DoNotDisturb alarm. set ringer mode to
+ * silence/ring based on intent
  */
 public class DoNotDisturbAlarmService extends IntentService {
 
@@ -49,6 +50,7 @@ public class DoNotDisturbAlarmService extends IntentService {
 
 	/**
 	 * performAction() : set ringer mode to silence/ring based on action
+	 * 
 	 * @param action
 	 */
 	private void performAction(Action action) {
@@ -57,18 +59,25 @@ public class DoNotDisturbAlarmService extends IntentService {
 		if (action == Action.START) { // silence the phone
 			Log.v(TAG, "Received : " + action.toString());
 
-			Intent notificationIntent = new Intent(this,
-					DoNotDisturbAlarmService.class);
-			PendingIntent contentIntent = PendingIntent.getService(
-					getApplicationContext(), 0, notificationIntent, 0);
+			// intent to call the activity when notification is clicked.
+			Intent callbackIntent = new Intent(this, DoNotDisturbActivity.class);
 
+			// navigation stack building
+			TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+			stackBuilder.addParentStack(DoNotDisturbActivity.class);
+			stackBuilder.addNextIntent(callbackIntent);
+
+			PendingIntent callbackPendingIntent = stackBuilder
+					.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+			
 			Notification.Builder builder = new Notification.Builder(
 					getApplicationContext())
 					.setSmallIcon(R.drawable.ic_stat_notify)
 					.setContentTitle("Do Not Disturb")
 					.setContentText("Phone Silenced")
 					.setTicker("Do Not Disturb")
-					.setContentIntent(contentIntent);
+					.setContentIntent(callbackPendingIntent);
+			
 			Notification notification = builder.getNotification();
 			notification.flags = Notification.FLAG_ONGOING_EVENT;
 			notifyMgr.notify(NOTIFY_ID, notification);
@@ -76,7 +85,7 @@ public class DoNotDisturbAlarmService extends IntentService {
 			// silence phone
 			AudioManager manager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 			manager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-			
+
 			Log.v(TAG, "Ringer MODE set to Silent");
 
 		} else if (action == Action.END) { // set phone to ring
@@ -86,7 +95,7 @@ public class DoNotDisturbAlarmService extends IntentService {
 
 			AudioManager manager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 			manager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
-			
+
 			Log.v(TAG, "Ringer MODE set to Normal");
 		}
 	}
